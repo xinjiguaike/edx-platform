@@ -309,7 +309,6 @@ class MicrositeCertificatesViewsTests(ModuleStoreTestCase):
             },
             "honor": {
                 "certificate_type": "Honor Code",
-                "document_body_class_append": "is-honorcode"
             }
         }"""
 
@@ -344,7 +343,6 @@ class MicrositeCertificatesViewsTests(ModuleStoreTestCase):
             },
             "honor": {
                 "certificate_type": "Honor Code",
-                "document_body_class_append": "is-honorcode"
             }
         }"""
         config = self._certificate_html_view_configuration(configuration_string=test_configuration_string)
