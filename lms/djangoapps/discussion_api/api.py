@@ -341,7 +341,7 @@ def get_thread_list(
     if result_page != page:
         raise Http404
 
-    results = [ThreadSerializer(thread, context=context).data for thread in threads]
+    results = [ThreadSerializer(thread, remove_fields=['response_count'], context=context).data for thread in threads]
     ret = get_paginated_data(request, results, page, num_pages)
     ret["text_search_rewrite"] = text_search_rewrite
     return ret
