@@ -20,22 +20,27 @@ class StudentViewTransformer(BlockStructureTransformer):
         # TODO
         # File "/edx/app/edxapp/edx-platform/common/lib/xmodule/xmodule/x_module.py", line 1125, in _xmodule
         #     raise UndefinedContext()
+        # import pdb; pdb.set_trace()
 
-        # for block_key in block_structure.topological_traversal():
-        #     block = block_structure.get_xblock(block_key)
-        #     block_structure.set_transformer_block_data(
-        #         block_key,
-        #         cls,
-        #         cls.STUDENT_VIEW_MULTI_DEVICE,
-        #         block.has_support(getattr(block, 'student_view', None), 'multi_device'),
-        #     )
-        #     if getattr(block, 'student_view_data', None):
-        #         block_structure.set_transformer_block_data(
-        #             block_key,
-        #             cls,
-        #             cls.STUDENT_VIEW_DATA,
-        #             block.student_view_data(),
-        #         )
+        for block_key in block_structure.topological_traversal():
+            block = block_structure.get_xblock(block_key)
+            student_view = getattr(block.__class__, 'student_view', None)
+            supports_multi_device = block.has_support(student_view, 'multi_device')
+            print "supports_multi_device: {} => {}".format(supports_multi_device, block.location)
+
+            block_structure.set_transformer_block_data(
+                block_key,
+                cls,
+                cls.STUDENT_VIEW_MULTI_DEVICE,
+                supports_multi_device,
+            )
+            # if getattr(block, 'student_view_data', None):
+            #     block_structure.set_transformer_block_data(
+            #         block_key,
+            #         cls,
+            #         cls.STUDENT_VIEW_DATA,
+            #         block.student_view_data(),
+            #     )
 
     def transform(self, user_info, block_structure):
         """
