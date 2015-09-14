@@ -1825,7 +1825,15 @@ class CombinedSystem(object):
         except AttributeError:
             pass
 
-        # This is horrible. And Wrong. So Wrong.
+        # This is horrible. And Wrong. So Wrong. The local import is because the
+        # LmsHandlerUrls brings in Django dependencies, which is bad (but we 
+        # can work around that). The other thing right now is that this clobbers
+        # the global monkeypatching mechansim working right for URLs in studio
+        # -- either need to convert Studio to use this, or only fall back to
+        # this behavior based on config or possibly by detecting the default.
+        # 
+        # This was mostly put in here to test what breaks and how much as we 
+        # peer down the rabbit hole.
         from lms_xblock.runtime import LmsHandlerUrls
         lms_handler_urls = LmsHandlerUrls(course_id=self._descriptor_system.course_id)
 

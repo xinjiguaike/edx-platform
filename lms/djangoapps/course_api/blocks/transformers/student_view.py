@@ -26,12 +26,15 @@ class StudentViewTransformer(BlockStructureTransformer):
         for block_key in block_structure.topological_traversal():
             block = block_structure.get_xblock(block_key)
             try:
+                #if block_key.block_type == "problem":
+                #    import pudb; pu.db
                 student_view = getattr(block.__class__, 'student_view', None)
                 supports_multi_device = block.has_support(student_view, 'multi_device')
             except Exception as e:
                 print "SKIPPING: {} cause {}".format(block.location, e)
-
-            print "supports_multi_device: {!s:5} => {}".format(supports_multi_device, block.location)
+                supports_multi_device = False
+            else:
+                print "supports_multi_device: {!s:5} => {}".format(supports_multi_device, block.location)
 
             block_structure.set_transformer_block_data(
                 block_key,

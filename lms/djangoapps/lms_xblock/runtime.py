@@ -86,6 +86,10 @@ class LmsHandlerUrls(object):
             func = getattr(block.__class__, handler_name, None)
             if not func:
                 raise ValueError("{!r} is not a function name".format(handler_name))
+
+            # Is the following necessary? ProxyAttribute causes an UndefinedContext error
+            # if trying this without the module system.
+            #
             #if not getattr(func, "_is_xblock_handler", False):
             #    raise ValueError("{!r} is not a handler name".format(handler_name))
 
