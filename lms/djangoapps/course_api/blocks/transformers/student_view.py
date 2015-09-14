@@ -40,6 +40,7 @@ class StudentViewTransformer(BlockStructureTransformer):
                 supports_multi_device,
             )
             if getattr(block, 'student_view_data', None):
+#                import pudb; pu.db
                 try:
                     student_view_data = block.student_view_data()
                 except Exception as e:

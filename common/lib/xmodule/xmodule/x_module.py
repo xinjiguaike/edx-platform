@@ -36,7 +36,6 @@ from opaque_keys.edx.asides import AsideUsageKeyV1, AsideDefinitionKeyV1
 from xmodule.exceptions import UndefinedContext
 import dogstats_wrapper as dog_stats_api
 
-
 log = logging.getLogger(__name__)
 
 XMODULE_METRIC_NAME = 'edxapp.xmodule'
@@ -1824,7 +1823,19 @@ class CombinedSystem(object):
         try:
             return getattr(self._module_system, name)
         except AttributeError:
-            return getattr(self._descriptor_system, name)
+            pass
+
+        # This is horrible. And Wrong. So Wrong.
+        from lms_xblock.runtime import LmsHandlerUrls
+        lms_handler_urls = LmsHandlerUrls(course_id=self._descriptor_system.course_id)
+
+        if name == "handler_url":
+            return lms_handler_urls.handler_url
+        elif name == "local_resource_url":
+            return lms_handler_urls.local_resource_url
+
+        # We couldn't find it in the ModuleSystem, so try the DescriptorSystem
+        return getattr(self._descriptor_system, name)
 
     def __setattr__(self, name, value):
         """

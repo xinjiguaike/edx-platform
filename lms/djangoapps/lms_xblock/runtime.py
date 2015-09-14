@@ -74,17 +74,20 @@ class LmsHandlerUrls(object):
     This must be mixed in to a runtime that already accepts and stores
     a course_id
     """
+    def __init__(self, course_id=None):
+        self.course_id = course_id
+
     # pylint: disable=unused-argument
     def handler_url(self, block, handler_name, suffix='', query='', thirdparty=False):
         """See :method:`xblock.runtime:Runtime.handler_url`"""
         view_name = 'xblock_handler'
         if handler_name:
             # Be sure this is really a handler.
-            func = getattr(block, handler_name, None)
+            func = getattr(block.__class__, handler_name, None)
             if not func:
                 raise ValueError("{!r} is not a function name".format(handler_name))
-            if not getattr(func, "_is_xblock_handler", False):
-                raise ValueError("{!r} is not a handler name".format(handler_name))
+            #if not getattr(func, "_is_xblock_handler", False):
+            #    raise ValueError("{!r} is not a handler name".format(handler_name))
 
         if thirdparty:
             view_name = 'xblock_handler_noauth'

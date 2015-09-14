@@ -817,8 +817,8 @@ class VideoDescriptor(VideoFields, VideoTranscriptsMixin, VideoStudioViewHandler
                 }
 
         #from nose.tools import set_trace; set_trace()
-        import pudb; pu.db
-        url = self.runtime.handler_url(self, 'transcript', 'download', query="lang=en", thirdparty=True)
+        #import pudb; pu.db
+        #url = self.runtime.handler_url(self, 'transcript', 'download', query="lang=en", thirdparty=True)
 
         transcripts_info = self.get_transcripts_info()
         transcripts = {
