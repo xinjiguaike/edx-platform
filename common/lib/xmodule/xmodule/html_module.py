@@ -103,6 +103,18 @@ class HtmlDescriptor(HtmlFields, XmlDescriptor, EditingDescriptor):  # pylint: d
     js_module_name = "HTMLEditingDescriptor"
     css = {'scss': [resource_string(__name__, 'css/editor/edit.scss'), resource_string(__name__, 'css/html/edit.scss')]}
 
+    @XBlock.supports("multi_device")
+    def student_view(self, context):
+        """
+        This is here just so that we can grab the supports info from the
+        descriptor and not have to get the XModule, which calls up other baggage
+        and gives us a UndefinedContext error when all we really want is to see
+        what an XBlock supports.
+
+        This won't actually get called.
+        """
+        pass
+
     # VS[compat] TODO (cpennington): Delete this method once all fall 2012 course
     # are being edited in the cms
     @classmethod
