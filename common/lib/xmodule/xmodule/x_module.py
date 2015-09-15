@@ -1213,6 +1213,7 @@ def descriptor_global_handler_url(block, handler_name, suffix='', query='', thir
     """
     raise NotImplementedError("Applications must monkey-patch this function before using handler_url for studio_view")
 
+descriptor_global_handler_url.unpatched = True
 
 # This function exists to give applications (LMS/CMS) a place to monkey-patch until
 # we can refactor modulestore to split out the FieldData half of its interface from
@@ -1222,6 +1223,8 @@ def descriptor_global_local_resource_url(block, uri):  # pylint: disable=invalid
     See :meth:`xblock.runtime.Runtime.local_resource_url`.
     """
     raise NotImplementedError("Applications must monkey-patch this function before using local_resource_url for studio_view")
+
+descriptor_global_local_resource_url.unpatched = True
 
 
 class MetricsMixin(object):
@@ -1820,29 +1823,54 @@ class CombinedSystem(object):
         DescriptorSystem, instead. This allows XModuleDescriptors that are bound as XModules
         to still function as XModuleDescriptors.
         """
+        # First we try a lookup in the module system...
         try:
             return getattr(self._module_system, name)
         except AttributeError:
             pass
 
-        # This is horrible. And Wrong. So Wrong. The local import is because the
-        # LmsHandlerUrls brings in Django dependencies, which is bad (but we 
-        # can work around that). The other thing right now is that this clobbers
-        # the global monkeypatching mechansim working right for URLs in studio
-        # -- either need to convert Studio to use this, or only fall back to
-        # this behavior based on config or possibly by detecting the default.
-        # 
-        # This was mostly put in here to test what breaks and how much as we 
-        # peer down the rabbit hole.
-        from lms_xblock.runtime import LmsHandlerUrls
-        lms_handler_urls = LmsHandlerUrls(course_id=self._descriptor_system.course_id)
+        # Before we look into the descriptor system, we're going to check to see
+        # if we're asking for handler_url or local_resource_url, which can be
+        # globally monkeypatched (Studio has to do this because runtimes are
+        # created from modulestores). For more background and refactoring plan,
+        # please see:
+        #
+        # https://openedx.atlassian.net/wiki/display/PLAT/Convert+from+Storage-centric+runtimes+to+Application-centric+runtimes
+        #
+        # The collect phase of BlockStructureTransformers (and 
+        # StudentViewTransformer in particular) only look at the descriptors
+        # (i.e. the parts not bound to a student). In this, it's like Studio.
+        # However, it needs to be able to create LMS runtime URLs (e.g.
+        # transcript download handlers).
+        #
+        # Because I don't really understand the full consequences of
+        # monkey-patching this on the LMS side, I'm going to detect when we have
+        # a url-related request and have *not* monkey-patched the global url
+        # handlers. In that case, we'll create our own LmsHandlerUrls object
+        # manually, and use it to do URL generation.
+        #
+        # The import is embedded here because we're in common/lib and adding the
+        # LmsHandlerUrls introduces a Django dependency.
+        #
+        # This is ugly.
+        global descriptor_global_handler_url
+        global descriptor_global_local_resource_url
+        is_unpatched = (
+            getattr(descriptor_global_handler_url, 'unpatched', False) and
+            getattr(descriptor_global_local_resource_url, 'unpatched', False)
+        )
 
-        if name == "handler_url":
-            return lms_handler_urls.handler_url
-        elif name == "local_resource_url":
-            return lms_handler_urls.local_resource_url
+        if name in ["handler_url", "local_resource_url"] and not is_monkey_patched:
+            from lms_xblock.runtime import LmsHandlerUrls
+            lms_handler_urls = LmsHandlerUrls(course_id=self._descriptor_system.course_id)
 
-        # We couldn't find it in the ModuleSystem, so try the DescriptorSystem
+            if name == "handler_url":
+                return lms_handler_urls.handler_url
+            elif name == "local_resource_url":
+                return lms_handler_urls.local_resource_url
+
+        # Otherwise, default to the original fallback behavior of checking the
+        # descriptor system.
         return getattr(self._descriptor_system, name)
 
     def __setattr__(self, name, value):

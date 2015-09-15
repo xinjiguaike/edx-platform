@@ -74,7 +74,7 @@ class LmsHandlerUrls(object):
     This must be mixed in to a runtime that already accepts and stores
     a course_id
     """
-    def __init__(self, course_id=None):
+    def __init__(self, course_id=None, **kwargs):
         self.course_id = course_id
 
     # pylint: disable=unused-argument
