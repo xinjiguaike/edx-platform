@@ -1860,18 +1860,21 @@ class CombinedSystem(object):
             getattr(descriptor_global_local_resource_url, 'unpatched', False)
         )
 
-        if name in ["handler_url", "local_resource_url"] and not is_monkey_patched:
-            from lms_xblock.runtime import LmsHandlerUrls
-            lms_handler_urls = LmsHandlerUrls(course_id=self._descriptor_system.course_id)
+        # Force the LMS handler only if we're asking for a URL handler and haven't patched
+        # the the global URL handlers
+        force_lms_url_handler = name in ["handler_url", "local_resource_url"] and is_unpatched
 
-            if name == "handler_url":
-                return lms_handler_urls.handler_url
-            elif name == "local_resource_url":
-                return lms_handler_urls.local_resource_url
+        if not force_lms_url_handler:
+            return getattr(self._descriptor_system, name)
 
-        # Otherwise, default to the original fallback behavior of checking the
-        # descriptor system.
-        return getattr(self._descriptor_system, name)
+        from lms_xblock.runtime import LmsHandlerUrls
+        lms_handler_urls = LmsHandlerUrls(course_id=self._descriptor_system.course_id)
+
+        if name == "handler_url":
+            return lms_handler_urls.handler_url
+        elif name == "local_resource_url":
+            return lms_handler_urls.local_resource_url
+
 
     def __setattr__(self, name, value):
         """
