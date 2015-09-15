@@ -1868,7 +1868,8 @@ class CombinedSystem(object):
             return getattr(self._descriptor_system, name)
 
         from lms_xblock.runtime import LmsHandlerUrls
-        lms_handler_urls = LmsHandlerUrls(course_id=self._descriptor_system.course_id)
+        lms_handler_urls = LmsHandlerUrls()
+        lms_handler_urls.course_id = self._descriptor_system.course_id
 
         if name == "handler_url":
             return lms_handler_urls.handler_url

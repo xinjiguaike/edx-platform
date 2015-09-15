@@ -74,11 +74,6 @@ class LmsHandlerUrls(object):
     This must be mixed in to a runtime that already accepts and stores
     a course_id
     """
-    def __init__(self, **kwargs):
-        super(LmsHandlerUrls, self).__init__(**kwargs)
-        if 'course_id' in kwargs:
-            self.course_id = kwargs['course_id']
-
     # pylint: disable=unused-argument
     def handler_url(self, block, handler_name, suffix='', query='', thirdparty=False):
         """See :method:`xblock.runtime:Runtime.handler_url`"""
