@@ -16,6 +16,9 @@ from models.settings.course_details import (CourseDetails, CourseSettingsEncoder
 from models.settings.course_grading import CourseGradingModel
 from contentstore.utils import reverse_course_url, reverse_usage_url
 from xmodule.modulestore.tests.factories import CourseFactory
+from student.roles import CourseInstructorRole, CourseStaffRole
+from student.tests.factories import UserFactory
+
 
 from models.settings.course_metadata import CourseMetadata
 from xmodule.fields import Date
@@ -1106,3 +1109,103 @@ class CourseGraderUpdatesTest(CourseTestCase):
         self.assertEqual(obj, grader)
         current_graders = CourseGradingModel.fetch(self.course.id).graders
         self.assertEqual(len(self.starting_graders) + 1, len(current_graders))
+
+
+class CourseEnrollmentEndFieldTest(CourseTestCase):
+    """
+    Base class to test the enrollment end fields in the course settings details view in Studio
+    when using marketing site flag and global vs non-global staff to access the page.
+    """
+    NOT_EDITABLE_HELPER_MESSAGE = "Contact your edX Partner Manager to update these settings."
+    NOT_EDITABLE_DATE_WRAPPER = "<div class=\"field date is-not-editable\" id=\"field-enrollment-end-date\">"
+    NOT_EDITABLE_TIME_WRAPPER = "<div class=\"field time is-not-editable\" id=\"field-enrollment-end-time\">"
+    NOT_EDITABLE_DATE_FIELD = "<input type=\"text\" class=\"end-date date end\" \
+id=\"course-enrollment-end-date\" placeholder=\"MM/DD/YYYY\" autocomplete=\"off\" readonly />"
+    NOT_EDITABLE_TIME_FIELD = "<input type=\"text\" class=\"time end\" \
+id=\"course-enrollment-end-time\" value=\"\" placeholder=\"HH:MM\" autocomplete=\"off\" readonly />"
+
+    EDITABLE_DATE_WRAPPER = "<div class=\"field date \" id=\"field-enrollment-end-date\">"
+    EDITABLE_TIME_WRAPPER = "<div class=\"field time \" id=\"field-enrollment-end-time\">"
+    EDITABLE_DATE_FIELD = "<input type=\"text\" class=\"end-date date end\" \
+id=\"course-enrollment-end-date\" placeholder=\"MM/DD/YYYY\" autocomplete=\"off\"  />"
+    EDITABLE_TIME_FIELD = "<input type=\"text\" class=\"time end\" \
+id=\"course-enrollment-end-time\" value=\"\" placeholder=\"HH:MM\" autocomplete=\"off\"  />"
+
+    def setUp(self):
+        """ Initialize course used to test enrollment fields. """
+        super(CourseEnrollmentEndFieldTest, self).setUp()
+        self.course = CourseFactory.create(org='edX', number='dummy', display_name='Marketing Site Course')
+        self.course_details_url = reverse_course_url('settings_handler', unicode(self.course.id))
+
+    def _get_course_details_response(self, global_staff):
+        """ Return the course details page as either global or non-global staff"""
+        if global_staff:
+            user = UserFactory(is_staff=True)
+        else:
+            user = UserFactory()
+            for role in [CourseInstructorRole, CourseStaffRole]:
+                role(self.course.id).add_users(user)
+
+        self.client.login(username=user.username, password='test')
+
+        return self.client.get_html(self.course_details_url)
+
+    def _verify_editable(self, response):
+        """
+        Assert that all editable field content exists and no
+        uneditable field content exists for enrollment end fields.
+        """
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, self.NOT_EDITABLE_HELPER_MESSAGE)
+        self.assertNotContains(response, self.NOT_EDITABLE_DATE_WRAPPER)
+        self.assertNotContains(response, self.NOT_EDITABLE_TIME_WRAPPER)
+        self.assertNotContains(response, self.NOT_EDITABLE_DATE_FIELD)
+        self.assertNotContains(response, self.NOT_EDITABLE_TIME_FIELD)
+        self.assertContains(response, self.EDITABLE_DATE_WRAPPER)
+        self.assertContains(response, self.EDITABLE_TIME_WRAPPER)
+        self.assertContains(response, self.EDITABLE_DATE_FIELD)
+        self.assertContains(response, self.EDITABLE_TIME_FIELD)
+
+    def _verify_not_editable(self, response):
+        """
+        Assert that all uneditable field content exists and no
+        editable field content exists for enrollment end fields.
+        """
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.NOT_EDITABLE_HELPER_MESSAGE)
+        self.assertContains(response, self.NOT_EDITABLE_DATE_WRAPPER)
+        self.assertContains(response, self.NOT_EDITABLE_TIME_WRAPPER)
+        self.assertContains(response, self.NOT_EDITABLE_DATE_FIELD)
+        self.assertContains(response, self.NOT_EDITABLE_TIME_FIELD)
+        self.assertNotContains(response, self.EDITABLE_DATE_WRAPPER)
+        self.assertNotContains(response, self.EDITABLE_TIME_WRAPPER)
+        self.assertNotContains(response, self.EDITABLE_DATE_FIELD)
+        self.assertNotContains(response, self.EDITABLE_TIME_FIELD)
+
+    @mock.patch.dict("django.conf.settings.FEATURES", {'ENABLE_MKTG_SITE': False})
+    def test_course_details_with_disabled_setting_global_staff(self):
+        """Test that user enrollment end date is editable in response
+        if the feature flag 'ENABLE_MKTG_SITE' is not enabled for global staff.
+        """
+        self._verify_editable(self._get_course_details_response(True))
+
+    @mock.patch.dict("django.conf.settings.FEATURES", {'ENABLE_MKTG_SITE': False})
+    def test_course_details_with_disabled_setting_non_global_staff(self):
+        """Test that user enrollment end date is editable in response
+        if the feature flag 'ENABLE_MKTG_SITE' is not enabled for non-global staff.
+        """
+        self._verify_editable(self._get_course_details_response(False))
+
+    @mock.patch.dict("django.conf.settings.FEATURES", {'ENABLE_MKTG_SITE': True})
+    def test_course_details_with_enabled_setting_global_staff(self):
+        """Test that user enrollment end date is editable in response
+        if the feature flag 'ENABLE_MKTG_SITE' is enabled for global staff.
+        """
+        self._verify_editable(self._get_course_details_response(True))
+
+    @mock.patch.dict("django.conf.settings.FEATURES", {'ENABLE_MKTG_SITE': True})
+    def test_course_details_with_enabled_setting_non_global_staff(self):
+        """Test that user enrollment end date is not editable in response
+        if the feature flag 'ENABLE_MKTG_SITE' is enabled for non-global staff.
+        """
+        self._verify_not_editable(self._get_course_details_response(False))

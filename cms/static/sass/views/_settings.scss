@@ -438,6 +438,24 @@
           padding-bottom: 0;
         }
 
+        // course details that should appear more like content than elements to change
+        .is-not-editable {
+
+          label {
+
+          }
+
+          input, textarea {
+            @extend %t-copy-lead1;
+            @extend %t-strong;
+            box-shadow: none;
+            border: none;
+            background: none;
+            padding: 10px;
+            margin: 0;
+          }
+        }
+
         .field {
           @include float(left);
           width: flex-grid(3, 9);
