@@ -234,8 +234,7 @@ class CapaDescriptor(CapaFields, RawDescriptor):
                 responsetypes.registry.get_class_for_tag(tag).multi_device_support
                 for tag in self.problem_types
             )
-        else:
-            return False
+        return False
 
     # Proxy to CapaModule for access to any of its attributes
     answer_available = module_attr('answer_available')

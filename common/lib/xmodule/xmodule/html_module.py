@@ -27,7 +27,12 @@ log = logging.getLogger("edx.courseware")
 _ = lambda text: text
 
 
-class HtmlFields(object):
+class HtmlBlock(object):
+    """
+    This will eventually subclass XBlock and merge HtmlModule and HtmlDescriptor
+    into one. For now, it's a place to put the pieces that are already sharable
+    between the two (field information and XBlock handlers).
+    """
     display_name = String(
         display_name=_("Display Name"),
         help=_("This name appears in the horizontal navigation at the top of the page."),
@@ -54,8 +59,12 @@ class HtmlFields(object):
         scope=Scope.settings
     )
 
+    @XBlock.supports("multi_device")
+    def student_view(self, context):
+        return super(HtmlModule, self).student_view(context)
 
-class HtmlModuleMixin(HtmlFields, XModule):
+
+class HtmlModuleMixin(HtmlBlock, XModule):
     """
     Attributes and methods used by HtmlModules internally.
     """
@@ -84,12 +93,8 @@ class HtmlModule(HtmlModuleMixin):
     """
     Module for putting raw html in a course
     """
-    @XBlock.supports("multi_device")
-    def student_view(self, context):
-        return super(HtmlModule, self).student_view(context)
 
-
-class HtmlDescriptor(HtmlFields, XmlDescriptor, EditingDescriptor):  # pylint: disable=abstract-method
+class HtmlDescriptor(HtmlBlock, XmlDescriptor, EditingDescriptor):  # pylint: disable=abstract-method
     """
     Module for putting raw html in a course
     """
@@ -102,18 +107,6 @@ class HtmlDescriptor(HtmlFields, XmlDescriptor, EditingDescriptor):  # pylint: d
     js = {'coffee': [resource_string(__name__, 'js/src/html/edit.coffee')]}
     js_module_name = "HTMLEditingDescriptor"
     css = {'scss': [resource_string(__name__, 'css/editor/edit.scss'), resource_string(__name__, 'css/html/edit.scss')]}
-
-    @XBlock.supports("multi_device")
-    def student_view(self, context):
-        """
-        This is here just so that we can grab the supports info from the
-        descriptor and not have to get the XModule, which calls up other baggage
-        and gives us a UndefinedContext error when all we really want is to see
-        what an XBlock supports.
-
-        This won't actually get called.
-        """
-        pass
 
     # VS[compat] TODO (cpennington): Delete this method once all fall 2012 course
     # are being edited in the cms
