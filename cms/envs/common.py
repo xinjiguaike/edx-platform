@@ -1099,3 +1099,16 @@ PROCTORING_BACKEND_PROVIDER = {
     'options': {},
 }
 PROCTORING_SETTINGS = {}
+
+
+########## django-sudo ##########
+def apply_django_sudo_settings(django_settings):
+    """Set provider-independent settings."""
+    # force re-authentication before activating administrative functions
+    django_settings.MIDDLEWARE_CLASSES += ('sudo.middleware.SudoMiddleware',)
+
+    # Allows sudo-mode
+    django_settings.INSTALLED_APPS += (
+        'sudo',
+        'django_sudo_helpers'
+    )
