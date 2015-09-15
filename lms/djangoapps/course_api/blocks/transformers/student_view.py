@@ -23,6 +23,8 @@ class StudentViewTransformer(BlockStructureTransformer):
         #     raise UndefinedContext()
         # import pdb; pdb.set_trace()
 
+        # import pudb; pu.db
+
         for block_key in block_structure.topological_traversal():
             block = block_structure.get_xblock(block_key)
             try:

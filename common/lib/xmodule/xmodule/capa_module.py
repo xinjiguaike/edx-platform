@@ -230,7 +230,10 @@ class CapaDescriptor(CapaFields, RawDescriptor):
         Returns whether the given view has support for the given functionality.
         """
         if functionality == "multi_device":
-            return self.lcp.has_multi_device_support
+            return all(
+                responsetypes.registry.get_class_for_tag(tag).multi_device_support
+                for tag in self.problem_types
+            )
         else:
             return False
 
