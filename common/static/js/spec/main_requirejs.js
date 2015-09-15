@@ -4,7 +4,6 @@
             'gettext': 'js/test/i18n',
             'jquery': 'js/vendor/jquery.min',
             'jquery.ui': 'js/vendor/jquery-ui.min',
-            'jquery.ui.selectable': 'js/vendor/jquery-ui.selectable.min',
             'jquery.flot': 'js/vendor/flot/jquery.flot.min',
             'jquery.form': 'js/vendor/jquery.form',
             'jquery.markitup': 'js/vendor/markitup/jquery.markitup',
