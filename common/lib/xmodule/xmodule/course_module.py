@@ -1572,3 +1572,11 @@ class CourseDescriptor(CourseFields, SequenceDescriptor, LicenseMixin):
             if p.scheme != scheme
         ]
         self.user_partitions = other_partitions + partitions  # pylint: disable=attribute-defined-outside-init
+
+    def is_discussion_enabled(self, user):
+        """
+        Return True if Discussion is enabled for a course; else False
+        """
+        if not any([tab.type == 'discussion' and tab.is_enabled(self, user) for tab in self.tabs]):
+            return False
+        return True

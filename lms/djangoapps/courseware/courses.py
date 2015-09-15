@@ -115,6 +115,20 @@ def get_course_with_access(user, action, course_key, depth=0, check_if_enrolled=
     return course
 
 
+def get_discussion_course_or_404(course_key, user):
+    """
+    Given a course_key, look up the corresponding course descriptor,
+    check that the user has the access to perform the specified action
+    on the course, discussion is enabled for the course and return the descriptor
+
+    Raises a 404 if the course_key is invalid, the user doesn't have access or discussion is disabled
+    """
+    course = get_course_with_access(user, 'load', course_key, check_if_enrolled=True)
+    if not course.is_discussion_enabled(user):
+        raise Http404
+    return course
+
+
 def course_image_url(course):
     """Try to look up the image url for the course.  If it's not found,
     log an error and return the dead link"""

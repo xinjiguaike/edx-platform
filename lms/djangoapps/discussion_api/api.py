@@ -14,7 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.locator import CourseKey
 
-from courseware.courses import get_course_with_access
+from courseware.courses import get_discussion_course_or_404
 from discussion_api.forms import CommentActionsForm, ThreadActionsForm
 from discussion_api.pagination import get_paginated_data
 from discussion_api.permissions import (
@@ -48,18 +48,6 @@ from lms.lib.comment_client.utils import CommentClientRequestError
 from openedx.core.djangoapps.course_groups.cohorts import get_cohort_id
 
 
-def _get_course_or_404(course_key, user):
-    """
-    Get the course descriptor, raising Http404 if the course is not found,
-    the user cannot access forums for the course, or the discussion tab is
-    disabled for the course.
-    """
-    course = get_course_with_access(user, 'load', course_key, check_if_enrolled=True)
-    if not any([tab.type == 'discussion' for tab in course.tabs]):
-        raise Http404
-    return course
-
-
 def _get_thread_and_context(request, thread_id, retrieve_kwargs=None):
     """
     Retrieve the given thread and build a serializer context for it, returning
@@ -74,7 +62,7 @@ def _get_thread_and_context(request, thread_id, retrieve_kwargs=None):
             retrieve_kwargs["mark_as_read"] = False
         cc_thread = Thread(id=thread_id).retrieve(**retrieve_kwargs)
         course_key = CourseKey.from_string(cc_thread["course_id"])
-        course = _get_course_or_404(course_key, request.user)
+        course = get_discussion_course_or_404(course_key, request.user)
         context = get_context(course, request, cc_thread)
         if (
                 not context["is_requester_privileged"] and
@@ -154,7 +142,7 @@ def get_course(request, course_key):
         Http404: if the course does not exist or is not accessible to the
           requesting user
     """
-    course = _get_course_or_404(course_key, request.user)
+    course = get_discussion_course_or_404(course_key, request.user)
     return {
         "id": unicode(course_key),
         "blackouts": [
@@ -190,7 +178,7 @@ def get_course_topics(request, course_key):
         """
         return module.sort_key or module.discussion_target
 
-    course = _get_course_or_404(course_key, request.user)
+    course = get_discussion_course_or_404(course_key, request.user)
     discussion_modules = get_accessible_discussion_modules(course, request.user)
     modules_by_category = defaultdict(list)
     for module in discussion_modules:
@@ -302,7 +290,7 @@ def get_thread_list(
             "order_direction": ["Invalid value. '{}' must be 'asc' or 'desc'".format(order_direction)]
         })
 
-    course = _get_course_or_404(course_key, request.user)
+    course = get_discussion_course_or_404(course_key, request.user)
     context = get_context(course, request)
 
     query_params = {
@@ -541,7 +529,7 @@ def create_thread(request, thread_data):
         raise ValidationError({"course_id": ["This field is required."]})
     try:
         course_key = CourseKey.from_string(course_id)
-        course = _get_course_or_404(course_key, user)
+        course = get_discussion_course_or_404(course_key, user)
     except (Http404, InvalidKeyError):
         raise ValidationError({"course_id": ["Invalid value."]})
 

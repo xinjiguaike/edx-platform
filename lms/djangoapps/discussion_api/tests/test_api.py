@@ -112,6 +112,7 @@ class GetCourseTest(UrlResetMixin, SharedModuleStoreTestCase):
         with self.assertRaises(Http404):
             get_course(self.request, _discussion_disabled_course_for(self.user).id)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.assertEqual(
             get_course(self.request, self.course.id),
@@ -126,6 +127,7 @@ class GetCourseTest(UrlResetMixin, SharedModuleStoreTestCase):
             }
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_blackout(self):
         # A variety of formats is accepted
         self.course.discussion_blackouts = [
@@ -143,6 +145,7 @@ class GetCourseTest(UrlResetMixin, SharedModuleStoreTestCase):
         )
 
     @ddt.data(None, "not a datetime", "2015", [])
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_blackout_errors(self, bad_value):
         self.course.discussion_blackouts = [
             [bad_value, "2015-06-09T00:00:00Z"],
@@ -240,6 +243,7 @@ class GetCourseTopicsTest(UrlResetMixin, ModuleStoreTestCase):
         with self.assertRaises(Http404):
             self.get_course_topics()
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_without_courseware(self):
         actual = self.get_course_topics()
         expected = {
@@ -250,6 +254,7 @@ class GetCourseTopicsTest(UrlResetMixin, ModuleStoreTestCase):
         }
         self.assertEqual(actual, expected)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_with_courseware(self):
         self.make_discussion_module("courseware-topic-id", "Foo", "Bar")
         actual = self.get_course_topics()
@@ -267,6 +272,7 @@ class GetCourseTopicsTest(UrlResetMixin, ModuleStoreTestCase):
         }
         self.assertEqual(actual, expected)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_many(self):
         with self.store.bulk_operations(self.course.id, emit_signals=False):
             self.course.discussion_topics = {
@@ -311,6 +317,7 @@ class GetCourseTopicsTest(UrlResetMixin, ModuleStoreTestCase):
         }
         self.assertEqual(actual, expected)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_sort_key(self):
         with self.store.bulk_operations(self.course.id, emit_signals=False):
             self.course.discussion_topics = {
@@ -360,6 +367,7 @@ class GetCourseTopicsTest(UrlResetMixin, ModuleStoreTestCase):
         }
         self.assertEqual(actual, expected)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_access_control(self):
         """
         Test that only topics that a user has access to are returned. The
@@ -535,6 +543,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
         with self.assertRaises(Http404):
             self.get_thread_list([], course=_discussion_disabled_course_for(self.user))
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_empty(self):
         self.assertEqual(
             self.get_thread_list([]),
@@ -546,6 +555,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
             }
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_get_threads_by_topic_id(self):
         self.get_thread_list([], topic_id_list=["topic_x", "topic_meow"])
         self.assertEqual(urlparse(httpretty.last_request().path).path, "/api/v1/threads")
@@ -560,6 +570,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
             "commentable_ids": ["topic_x,topic_meow"]
         })
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic_query_params(self):
         self.get_thread_list([], page=6, page_size=14)
         self.assert_last_query_params({
@@ -572,6 +583,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
             "recursive": ["False"],
         })
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_thread_content(self):
         source_threads = [
             {
@@ -709,6 +721,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_request_group(self, role_name, course_is_cohorted):
         cohort_course = CourseFactory.create(cohort_config={"cohorted": course_is_cohorted})
         CourseEnrollmentFactory.create(user=self.user, course_id=cohort_course.id)
@@ -720,6 +733,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
         expected_has_group = (course_is_cohorted and role_name == FORUM_ROLE_STUDENT)
         self.assertEqual(actual_has_group, expected_has_group)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_pagination(self):
         # N.B. Empty thread list is not realistic but convenient for this test
         self.assertEqual(
@@ -756,6 +770,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
             get_thread_list(self.request, self.course.id, page=4, page_size=10)
 
     @ddt.data(None, "rewritten search string")
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_text_search(self, text_search_rewrite):
         self.register_get_threads_search_response([], text_search_rewrite)
         self.assertEqual(
@@ -784,6 +799,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
             "text": ["test search string"],
         })
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_following(self):
         self.register_subscribed_threads_response(self.user, [], page=1, num_pages=1)
         result = get_thread_list(
@@ -811,6 +827,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
         })
 
     @ddt.data("unanswered", "unread")
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_view_query(self, query):
         self.register_get_threads_response([], page=1, num_pages=1)
         result = get_thread_list(
@@ -845,6 +862,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
         ("vote_count", "votes")
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_order_by_query(self, http_query, cc_query):
         """
         Tests the order_by parameter
@@ -880,6 +898,7 @@ class GetThreadListTest(CommentsServiceMockMixin, UrlResetMixin, SharedModuleSto
         })
 
     @ddt.data("asc", "desc")
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_order_direction_query(self, http_query):
         self.register_get_threads_response([], page=1, num_pages=1)
         result = get_thread_list(
@@ -986,6 +1005,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_group_access(
             self,
             role_name,
@@ -1026,6 +1046,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
             self.assertTrue(expected_error)
 
     @ddt.data(True, False)
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_discussion_endorsed(self, endorsed_value):
         with self.assertRaises(ValidationError) as assertion:
             self.get_comment_list(
@@ -1037,6 +1058,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
             {"endorsed": ["This field may not be specified for discussion threads."]}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_question_without_endorsed(self):
         with self.assertRaises(ValidationError) as assertion:
             self.get_comment_list(
@@ -1048,6 +1070,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
             {"endorsed": ["This field is required for question threads."]}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_empty(self):
         discussion_thread = self.make_minimal_cs_thread(
             {"thread_type": "discussion", "children": [], "resp_total": 0}
@@ -1072,6 +1095,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
             {"results": [], "next": None, "previous": None}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic_query_params(self):
         self.get_comment_list(
             self.make_minimal_cs_thread({
@@ -1092,6 +1116,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
             }
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_discussion_content(self):
         source_comments = [
             {
@@ -1174,6 +1199,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
         )["results"]
         self.assertEqual(actual_comments, expected_comments)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_question_content(self):
         thread = self.make_minimal_cs_thread({
             "thread_type": "question",
@@ -1188,6 +1214,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
         non_endorsed_actual = self.get_comment_list(thread, endorsed=False)
         self.assertEqual(non_endorsed_actual["results"][0]["id"], "non_endorsed_comment")
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_endorsed_by_anonymity(self):
         """
         Ensure thread anonymity is properly considered in serializing
@@ -1209,6 +1236,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
         ("question", False, "non_endorsed_responses", "non_endorsed_resp_total"),
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_cs_pagination(self, thread_type, endorsed_arg, response_field, response_total_field):
         """
         Test cases in which pagination is done by the comments service.
@@ -1257,6 +1285,7 @@ class GetCommentListTest(CommentsServiceMockMixin, SharedModuleStoreTestCase):
         with self.assertRaises(Http404):
             self.get_comment_list(thread, endorsed=endorsed_arg, page=2, page_size=5)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_question_endorsed_pagination(self):
         thread = self.make_minimal_cs_thread({
             "thread_type": "question",
@@ -1366,6 +1395,7 @@ class CreateThreadTest(
         }
 
     @mock.patch("eventtracking.tracker.emit")
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self, mock_emit):
         self.register_post_thread_response({
             "id": "test_id",
@@ -1451,6 +1481,7 @@ class CreateThreadTest(
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_group_id(self, role_name, course_is_cohorted, topic_is_cohorted, data_group_state):
         """
         Tests whether the user has permission to create a thread with certain
@@ -1500,6 +1531,7 @@ class CreateThreadTest(
         except ValidationError:
             self.assertTrue(expected_error)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_following(self):
         self.register_post_thread_response({"id": "test_id"})
         self.register_subscription_response(self.user)
@@ -1518,6 +1550,7 @@ class CreateThreadTest(
             {"source_type": ["thread"], "source_id": ["test_id"]}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_voted(self):
         self.register_post_thread_response({"id": "test_id"})
         self.register_thread_votes_response("test_id")
@@ -1534,6 +1567,7 @@ class CreateThreadTest(
             {"user_id": [str(self.user.id)], "value": ["up"]}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_abuse_flagged(self):
         self.register_post_thread_response({"id": "test_id"})
         self.register_thread_flag_response("test_id")
@@ -1622,6 +1656,7 @@ class CreateCommentTest(
 
     @ddt.data(None, "test_parent")
     @mock.patch("eventtracking.tracker.emit")
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_success(self, parent_id, mock_emit):
         if parent_id:
             self.register_get_comment_response({"id": parent_id, "thread_id": "test_thread"})
@@ -1711,6 +1746,7 @@ class CreateCommentTest(
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_endorsed(self, role_name, is_thread_author, thread_type):
         role = Role.objects.create(name=role_name, course_id=self.course.id)
         role.users = [self.user]
@@ -1736,6 +1772,7 @@ class CreateCommentTest(
         except ValidationError:
             self.assertTrue(expected_error)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_voted(self):
         self.register_post_comment_response({"id": "test_comment"}, "test_thread")
         self.register_comment_votes_response("test_comment")
@@ -1752,6 +1789,7 @@ class CreateCommentTest(
             {"user_id": [str(self.user.id)], "value": ["up"]}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_abuse_flagged(self):
         self.register_post_comment_response({"id": "test_comment"}, "test_thread")
         self.register_comment_flag_response("test_comment")
@@ -1815,6 +1853,7 @@ class CreateCommentTest(
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_group_access(self, role_name, course_is_cohorted, thread_group_state):
         cohort_course = CourseFactory.create(cohort_config={"cohorted": course_is_cohorted})
         CourseEnrollmentFactory.create(user=self.user, course_id=cohort_course.id)
@@ -1905,6 +1944,7 @@ class UpdateThreadTest(
         self.register_get_thread_response(cs_data)
         self.register_put_thread_response(cs_data)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_empty(self):
         """Check that an empty update does not make any modifying requests."""
         # Ensure that the default following value of False is not applied implicitly
@@ -1914,6 +1954,7 @@ class UpdateThreadTest(
         for request in httpretty.httpretty.latest_requests:
             self.assertEqual(request.method, "GET")
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_thread()
         with self.assert_signal_sent(api, 'thread_edited', sender=None, user=self.user, exclude_args=('post',)):
@@ -1999,6 +2040,7 @@ class UpdateThreadTest(
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_group_access(self, role_name, course_is_cohorted, thread_group_state):
         cohort_course = CourseFactory.create(cohort_config={"cohorted": course_is_cohorted})
         CourseEnrollmentFactory.create(user=self.user, course_id=cohort_course.id)
@@ -2030,6 +2072,7 @@ class UpdateThreadTest(
         FORUM_ROLE_COMMUNITY_TA,
         FORUM_ROLE_STUDENT,
     )
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_author_only_fields(self, role_name):
         role = Role.objects.create(name=role_name, course_id=self.course.id)
         role.users = [self.user]
@@ -2049,6 +2092,7 @@ class UpdateThreadTest(
 
     @ddt.data(*itertools.product([True, False], [True, False]))
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_following(self, old_following, new_following):
         """
         Test attempts to edit the "following" field.
@@ -2088,6 +2132,7 @@ class UpdateThreadTest(
 
     @ddt.data(*itertools.product([True, False], [True, False]))
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_voted(self, old_voted, new_voted):
         """
         Test attempts to edit the "voted" field.
@@ -2132,6 +2177,7 @@ class UpdateThreadTest(
 
     @ddt.data(*itertools.product([True, False], [True, False]))
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_abuse_flagged(self, old_flagged, new_flagged):
         """
         Test attempts to edit the "abuse_flagged" field.
@@ -2165,6 +2211,7 @@ class UpdateThreadTest(
                 {"user_id": [str(self.user.id)]}
             )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_invalid_field(self):
         self.register_thread()
         with self.assertRaises(ValidationError) as assertion:
@@ -2244,6 +2291,7 @@ class UpdateCommentTest(
             self.assertEqual(request.method, "GET")
 
     @ddt.data(None, "test_parent")
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self, parent_id):
         self.register_comment({"parent_id": parent_id})
         with self.assert_signal_sent(api, 'comment_edited', sender=None, user=self.user, exclude_args=('post',)):
@@ -2315,6 +2363,7 @@ class UpdateCommentTest(
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_group_access(self, role_name, course_is_cohorted, thread_group_state):
         cohort_course = CourseFactory.create(cohort_config={"cohorted": course_is_cohorted})
         CourseEnrollmentFactory.create(user=self.user, course_id=cohort_course.id)
@@ -2356,6 +2405,7 @@ class UpdateCommentTest(
         [True, False],
     ))
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_raw_body_access(self, role_name, is_thread_author, is_comment_author):
         role = Role.objects.create(name=role_name, course_id=self.course.id)
         role.users = [self.user]
@@ -2388,6 +2438,7 @@ class UpdateCommentTest(
         [True, False],
     ))
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_endorsed_access(self, role_name, is_thread_author, thread_type, is_comment_author):
         role = Role.objects.create(name=role_name, course_id=self.course.id)
         role.users = [self.user]
@@ -2414,6 +2465,7 @@ class UpdateCommentTest(
 
     @ddt.data(*itertools.product([True, False], [True, False]))
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_voted(self, old_voted, new_voted):
         """
         Test attempts to edit the "voted" field.
@@ -2458,6 +2510,7 @@ class UpdateCommentTest(
 
     @ddt.data(*itertools.product([True, False], [True, False]))
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_abuse_flagged(self, old_flagged, new_flagged):
         """
         Test attempts to edit the "abuse_flagged" field.
@@ -2535,6 +2588,7 @@ class DeleteThreadTest(
         self.register_get_thread_response(cs_data)
         self.register_delete_thread_response(cs_data["id"])
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_thread()
         with self.assert_signal_sent(api, 'thread_deleted', sender=None, user=self.user, exclude_args=('post',)):
@@ -2573,6 +2627,7 @@ class DeleteThreadTest(
         FORUM_ROLE_COMMUNITY_TA,
         FORUM_ROLE_STUDENT,
     )
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_non_author_delete_allowed(self, role_name):
         role = Role.objects.create(name=role_name, course_id=self.course.id)
         role.users = [self.user]
@@ -2597,6 +2652,7 @@ class DeleteThreadTest(
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_group_access(self, role_name, course_is_cohorted, thread_group_state):
         """
         Tests group access for deleting a thread
@@ -2683,6 +2739,7 @@ class DeleteCommentTest(
         self.register_get_comment_response(cs_comment_data)
         self.register_delete_comment_response(self.comment_id)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_comment_and_thread()
         with self.assert_signal_sent(api, 'comment_deleted', sender=None, user=self.user, exclude_args=('post',)):
@@ -2726,6 +2783,7 @@ class DeleteCommentTest(
         FORUM_ROLE_COMMUNITY_TA,
         FORUM_ROLE_STUDENT,
     )
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_non_author_delete_allowed(self, role_name):
         role = Role.objects.create(name=role_name, course_id=self.course.id)
         role.users = [self.user]
@@ -2752,6 +2810,7 @@ class DeleteCommentTest(
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_group_access(self, role_name, course_is_cohorted, thread_group_state):
         """
         Tests group access for deleting a comment
@@ -2835,6 +2894,7 @@ class RetrieveThreadTest(
         cs_data.update(overrides or {})
         self.register_get_thread_response(cs_data)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         expected_response_data = {
             "author": self.thread_author.username,
@@ -2874,6 +2934,7 @@ class RetrieveThreadTest(
         with self.assertRaises(Http404):
             get_thread(self.request, "missing_thread")
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_nonauthor_enrolled_in_course(self):
         expected_response_data = {
             "author": self.thread_author.username,
@@ -2931,6 +2992,7 @@ class RetrieveThreadTest(
         )
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_group_access(self, role_name, course_is_cohorted, thread_group_state):
         """
         Tests group access for retrieving a thread

@@ -1,12 +1,15 @@
 """
 Serializer for user API
 """
+from django.http import Http404
+from opaque_keys.edx.keys import CourseKey
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from django.template import defaultfilters
 
 from courseware.access import has_access
+from courseware.courses import get_discussion_course_or_404
 from student.models import CourseEnrollment, User
 from certificates.models import certificate_status_for_student, CertificateStatuses
 from xmodule.course_module import DEFAULT_START_DATE
@@ -34,10 +37,20 @@ class CourseOverviewField(serializers.RelatedField):
                 kwargs={'course_id': course_id},
                 request=request
             )
+            try:
+                get_discussion_course_or_404(CourseKey.from_string(course_id), request.user)
+                discussion_url = reverse(
+                    'discussion_course',
+                    kwargs={'course_id': course_id},
+                    request=request
+                )
+            except Http404:
+                discussion_url = None
         else:
             video_outline_url = None
             course_updates_url = None
             course_handouts_url = None
+            discussion_url = None
 
         if course_overview.advertised_start is not None:
             start_type = "string"
@@ -68,6 +81,7 @@ class CourseOverviewField(serializers.RelatedField):
             "video_outline": video_outline_url,
             "course_updates": course_updates_url,
             "course_handouts": course_handouts_url,
+            "discussion_url": discussion_url,
             "subscription_id": course_overview.clean_id(padding_char='_'),
             "courseware_access": has_access(request.user, 'load_mobile', course_overview).to_json() if request else None
         }

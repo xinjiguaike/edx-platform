@@ -86,6 +86,7 @@ class CourseViewTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             {"developer_message": "Not found."}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_get_success(self):
         response = self.client.get(self.url)
         self.assert_response_correct(
@@ -119,6 +120,7 @@ class CourseTopicsViewTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             {"developer_message": "Not found."}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_get_success(self):
         response = self.client.get(self.url)
         self.assert_response_correct(
@@ -162,6 +164,7 @@ class ThreadViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             {"developer_message": "Not found."}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_get_user_response(self.user, upvoted_ids=["test_thread"])
         source_threads = [{
@@ -240,6 +243,7 @@ class ThreadViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
         })
 
     @ddt.data("unread", "unanswered")
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_view_query(self, query):
         threads = [make_minimal_cs_thread()]
         self.register_get_user_response(self.user)
@@ -262,6 +266,7 @@ class ThreadViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             query: ["true"],
         })
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_pagination(self):
         self.register_get_user_response(self.user)
         self.register_get_threads_response([], page=1, num_pages=1)
@@ -284,6 +289,7 @@ class ThreadViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             "recursive": ["False"],
         })
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_text_search(self):
         self.register_get_user_response(self.user)
         self.register_get_threads_search_response([], None)
@@ -307,6 +313,7 @@ class ThreadViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             "text": ["test search string"],
         })
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_following(self):
         self.register_get_user_response(self.user)
         self.register_subscribed_threads_response(self.user, [], page=1, num_pages=1)
@@ -335,6 +342,7 @@ class ThreadViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
         ("vote_count", "votes")
     )
     @ddt.unpack
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_order_by(self, http_query, cc_query):
         """
         Tests the order_by parameter
@@ -364,6 +372,7 @@ class ThreadViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
         })
 
     @ddt.data("asc", "desc")
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_order_direction(self, query):
         threads = [make_minimal_cs_thread()]
         self.register_get_user_response(self.user)
@@ -394,6 +403,7 @@ class ThreadViewSetCreateTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
         super(ThreadViewSetCreateTest, self).setUp()
         self.url = reverse("thread-list")
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_get_user_response(self.user)
         self.register_post_thread_response({
@@ -486,6 +496,7 @@ class ThreadViewSetPartialUpdateTest(DiscussionAPIViewTestMixin, ModuleStoreTest
         super(ThreadViewSetPartialUpdateTest, self).setUp()
         self.url = reverse("thread-detail", kwargs={"thread_id": "test_thread"})
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_get_user_response(self.user)
         cs_thread = make_minimal_cs_thread({
@@ -556,6 +567,7 @@ class ThreadViewSetPartialUpdateTest(DiscussionAPIViewTestMixin, ModuleStoreTest
             }
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_error(self):
         self.register_get_user_response(self.user)
         cs_thread = make_minimal_cs_thread({
@@ -587,6 +599,7 @@ class ThreadViewSetDeleteTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
         self.url = reverse("thread-detail", kwargs={"thread_id": "test_thread"})
         self.thread_id = "test_thread"
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_get_user_response(self.user)
         cs_thread = make_minimal_cs_thread({
@@ -638,6 +651,7 @@ class CommentViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             {"developer_message": "Not found."}
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_get_user_response(self.user, upvoted_ids=["test_comment"])
         source_comments = [{
@@ -707,6 +721,7 @@ class CommentViewSetListTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
             }
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_pagination(self):
         """
         Test that pagination parameters are correctly plumbed through to the
@@ -752,6 +767,7 @@ class CommentViewSetDeleteTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
         self.url = reverse("comment-detail", kwargs={"comment_id": "test_comment"})
         self.comment_id = "test_comment"
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_get_user_response(self.user)
         cs_thread = make_minimal_cs_thread({
@@ -791,6 +807,7 @@ class CommentViewSetCreateTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
         super(CommentViewSetCreateTest, self).setUp()
         self.url = reverse("comment-list")
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_get_user_response(self.user)
         self.register_get_thread_response(
@@ -896,6 +913,7 @@ class CommentViewSetPartialUpdateTest(DiscussionAPIViewTestMixin, ModuleStoreTes
         self.register_get_comment_response(cs_comment)
         self.register_put_comment_response(cs_comment)
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         request_data = {"raw_body": "Edited body"}
         expected_response_data = {
@@ -938,6 +956,7 @@ class CommentViewSetPartialUpdateTest(DiscussionAPIViewTestMixin, ModuleStoreTes
             }
         )
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_error(self):
         request_data = {"raw_body": ""}
         response = self.client.patch(  # pylint: disable=no-member
@@ -961,6 +980,7 @@ class ThreadViewSetRetrieveTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase)
         self.url = reverse("thread-detail", kwargs={"thread_id": "test_thread"})
         self.thread_id = "test_thread"
 
+    @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def test_basic(self):
         self.register_get_user_response(self.user)
         cs_thread = make_minimal_cs_thread({
