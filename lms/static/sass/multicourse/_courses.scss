@@ -376,7 +376,7 @@ $facet-background-color: #007db8;
       @extend %t-strong;
       margin: ($baseline/2);
       width: auto;
-      color: $m-blue-d5;
+      color: $blue-d1; // WCAG 2.0 AA requirements
       text-align: center;
       text-transform: uppercase;
     }
