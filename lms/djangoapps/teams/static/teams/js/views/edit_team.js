@@ -98,7 +98,7 @@
                     }
                 },
 
-                createOrUpdateTeam: function (event) {
+                createOrUpdateTeam: _.debounce(function (event) {
                     event.preventDefault();
                     var view = this,
                         teamLanguage = this.teamLanguageField.fieldValue(),
@@ -146,7 +146,7 @@
                             }
                             view.showMessage(message, message);
                         });
-                },
+                }, 500, true),
 
                 validateTeamData: function (data) {
                     var status = true,
