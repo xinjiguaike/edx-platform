@@ -1968,6 +1968,7 @@ INSTALLED_APPS = (
     'teams',
 
     'xblock_django',
+    'django_optional_include',
 )
 
 ######################### CSRF #########################################
