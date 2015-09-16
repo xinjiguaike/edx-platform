@@ -1860,11 +1860,14 @@ class CombinedSystem(object):
             getattr(descriptor_global_local_resource_url, 'unpatched', False)
         )
 
-        # Force the LMS handler only if we're asking for a URL handler and haven't patched
-        # the the global URL handlers
+        # Force the LMS handler only if all of the following are true:
+        # 1. We're asking for a URL handler.
+        # 2. Nothing has monkey-patched the global values (e.g. Studio).
+        # 3. There is a course_id in the descriptor_system (not true for
+        #    MakoDescriptorSystem).
         force_lms_url_handler = name in ["handler_url", "local_resource_url"] and is_unpatched
 
-        if not force_lms_url_handler:
+        if not (force_lms_url_handler and hasattr(self._descriptor_system, 'course_id')):
             return getattr(self._descriptor_system, name)
 
         from lms_xblock.runtime import LmsHandlerUrls
