@@ -98,7 +98,20 @@
                     }
                 },
 
+                disablePrimaryClickAction: function() {
+                    this.undelegateEvents();
+                    this.events = _.clone(this.events);
+                    delete this.events['click .action-primary'];
+                    this.delegateEvents();
+                }
+
+                enablePrimaryClickAction: function() {
+                    this.events['click .action-primary'] = 'createOrUpdateTeam';
+                    this.delegateEvents();
+                }
+
                 createOrUpdateTeam: function (event) {
+                    disablePrimaryClickAction();
                     event.preventDefault();
                     var view = this,
                         teamLanguage = this.teamLanguageField.fieldValue(),
@@ -145,6 +158,7 @@
                                 message = response.user_message;
                             }
                             view.showMessage(message, message);
+                            enablePrimaryClickAction();
                         });
                 },
 
