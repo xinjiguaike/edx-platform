@@ -20,7 +20,6 @@
                 },
 
                 initialize: function(options) {
-                    this.canClick = true;
                     this.teamEvents = options.teamEvents;
                     this.context = options.context;
                     this.topic = options.topic;
@@ -100,9 +99,6 @@
                 },
 
                 createOrUpdateTeam: function (event) {
-                    if (this.canClick === false)
-                        return;
-                    this.canClick = false;
                     event.preventDefault();
                     var view = this,
                         teamLanguage = this.teamLanguageField.fieldValue(),
@@ -149,7 +145,6 @@
                                 message = response.user_message;
                             }
                             view.showMessage(message, message);
-                            this.canClick = true;
                         });
                 },
 
