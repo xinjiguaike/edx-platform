@@ -20,6 +20,7 @@
                 },
 
                 initialize: function(options) {
+                    this.canClick = true;
                     this.teamEvents = options.teamEvents;
                     this.context = options.context;
                     this.topic = options.topic;
@@ -98,20 +99,10 @@
                     }
                 },
 
-                disablePrimaryClickAction: function() {
-                    this.undelegateEvents();
-                    this.events = _.clone(this.events);
-                    delete this.events['click .action-primary'];
-                    this.delegateEvents();
-                }
-
-                enablePrimaryClickAction: function() {
-                    this.events['click .action-primary'] = 'createOrUpdateTeam';
-                    this.delegateEvents();
-                }
-
                 createOrUpdateTeam: function (event) {
-                    disablePrimaryClickAction();
+                    if (this.canClick === false)
+                        return;
+                    this.canClick = false;
                     event.preventDefault();
                     var view = this,
                         teamLanguage = this.teamLanguageField.fieldValue(),
@@ -158,7 +149,7 @@
                                 message = response.user_message;
                             }
                             view.showMessage(message, message);
-                            enablePrimaryClickAction();
+                            this.canClick = true;
                         });
                 },
 
