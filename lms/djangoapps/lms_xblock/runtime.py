@@ -80,6 +80,10 @@ class LmsHandlerUrls(object):
         view_name = 'xblock_handler'
         if handler_name:
             # Be sure this is really a handler.
+            #
+            # We're checking the .__class__ instead of the block itself to avoid
+            # auto-proxying from Descriptor -> Module, in case descriptors want
+            # to ask for handler URLs without a student context.
             func = getattr(block.__class__, handler_name, None)
             if not func:
                 raise ValueError("{!r} is not a function name".format(handler_name))

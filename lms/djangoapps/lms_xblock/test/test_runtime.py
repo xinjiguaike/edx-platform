@@ -39,12 +39,25 @@ class TestQuoteSlashes(TestCase):
         self.assertNotIn('/', quote_slashes(test_string))
 
 
+class BlockMock(Mock):
+    """Mock class that we fill with our "handler" methods."""
+
+    def handler(self, _context):
+        pass
+
+    def handler1(self, _context):
+        pass
+
+    def handler_a(self, _context):
+        pass
+
+
 class TestHandlerUrl(TestCase):
     """Test the LMS handler_url"""
 
     def setUp(self):
         super(TestHandlerUrl, self).setUp()
-        self.block = Mock(name='block', scope_ids=ScopeIds(None, None, None, 'dummy'))
+        self.block = BlockMock(name='block', scope_ids=ScopeIds(None, None, None, 'dummy'))
         self.course_key = SlashSeparatedCourseKey("org", "course", "run")
         self.runtime = LmsModuleSystem(
             static_url='/static',
