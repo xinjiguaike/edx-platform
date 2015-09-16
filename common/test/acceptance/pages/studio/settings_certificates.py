@@ -116,6 +116,50 @@ class CertificatesPage(CoursePage):
             'Add certificate button is displayed'
         ).fulfill()
 
+    def wait_for_css_animation_to_end(self, element_selector, description, timeout=10):
+        """
+        Ensure that all CSS animations on the element selected by 'element_selector' are complete.
+
+        Example usage:
+
+        .. code:: python
+
+            self.wait_for_css_animation_to_end('.prompt', 'Animation ended on prompt pop up')
+
+        Arguments:
+            element_selector (str): css selector of the element.
+            description (str): Description of the Promise, used in log messages.
+            timeout (float): Maximum number of seconds to wait for the Promise to be satisfied before timing out
+
+        """
+
+        def _stop_css_animations():
+            """
+            Wait for jquery to load and then stop all running animations on the element selected by 'element_selector'.
+            """
+            js_query = """
+                function stopAnimation()
+                {
+                    $('%(element_selector)s').css("-webkit-animation", "none");
+                    $('%(element_selector)s').css("-moz-animation", "none");
+                    $('%(element_selector)s').css("-ms-animation", "none");
+                    $('%(element_selector)s').css("animation", "none");
+                }
+                if(typeof(jQuery)=='undefined')
+                    return false;
+
+                stopAnimation()
+                return true;
+            """ % {'element_selector': element_selector}
+
+            return self.browser.execute_script(js_query)
+
+        EmptyPromise(
+            _stop_css_animations,
+            description,
+            timeout=timeout
+        ).fulfill()
+
     ################
     # Click Actions
     ################
@@ -138,8 +182,10 @@ class CertificatesPage(CoursePage):
         """
         Clicks the main action presented by the prompt (such as 'Delete')
         """
+        self.wait_for_css_animation_to_end('.prompt', 'Finished waiting for css animations.')
         self.wait_for_confirmation_prompt()
-        self.q(css='button.action-primary').first.click()
+        self.q(css='.prompt button.action-primary').first.click()
+        self.wait_for_element_invisibility('.prompt', 'wait for pop up to disappear')
         self.wait_for_ajax()
 
 
@@ -263,7 +309,7 @@ class Certificate(object):
         Returns whether or not the certificate delete icon is present.
         """
         EmptyPromise(
-            lambda: self.find_css('.actions .delete').present,
+            lambda: self.find_css('.actions .delete.action-icon').present,
             'Certificate delete button is displayed'
         ).fulfill()
 
@@ -323,8 +369,7 @@ class Certificate(object):
         Remove the first (possibly the only) certificate from the set
         """
         self.wait_for_certificate_delete_button()
-        self.find_css('.actions .delete').first.click()
-        self.page.wait_for_ajax()
+        self.find_css('.actions .delete.action-icon').first.click()
 
 
 class Signatory(object):
