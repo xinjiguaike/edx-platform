@@ -1853,8 +1853,6 @@ class CombinedSystem(object):
         # LmsHandlerUrls introduces a Django dependency.
         #
         # This is ugly.
-        global descriptor_global_handler_url
-        global descriptor_global_local_resource_url
         is_unpatched = (
             getattr(descriptor_global_handler_url, 'unpatched', False) and
             getattr(descriptor_global_local_resource_url, 'unpatched', False)
