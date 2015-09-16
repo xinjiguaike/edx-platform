@@ -2684,6 +2684,26 @@ class SplitMongoModuleStore(SplitBulkWriteMixin, ModuleStoreWriteBase):
                 # update the index entry if appropriate
                 self._update_head(dest_course_key, index_entry, dest_course_key.branch, new_structure['_id'])
 
+    def force_publish_course(self, course_locator, user_id):
+        """
+        Helper method to forcefully publish a course,
+        making the published branch point to the same structure as the draft branch.
+        """
+        print 'Publishing the course {0} ...'.format(course_locator)
+        index_entry = self.get_course_index(course_locator)
+        if index_entry is not None:
+            # update published branch version only if publish and draft point to different versions
+            if  index_entry['versions']['published-branch'] != index_entry['versions']['draft-branch']:
+                self._update_head(
+                    course_locator,
+                    index_entry,
+                    'published-branch',
+                    index_entry['versions']['draft-branch']
+                )
+                print "Published the course '{0}' forcefully.".format(course_locator)
+            else:
+                print "Course '{0}' already in published state.".format(course_locator)
+
     def fix_not_found(self, course_locator, user_id):
         """
         Only intended for rather low level methods to use. Goes through the children attrs of
