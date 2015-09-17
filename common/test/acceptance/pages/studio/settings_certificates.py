@@ -12,6 +12,7 @@ import os
 
 from bok_choy.promise import EmptyPromise
 from .course_page import CoursePage
+from common.test.acceptance.tests.helpers import disable_animations
 
 
 class CertificatesPage(CoursePage):
@@ -116,50 +117,6 @@ class CertificatesPage(CoursePage):
             'Add certificate button is displayed'
         ).fulfill()
 
-    def wait_for_css_animation_to_end(self, element_selector, description, timeout=10):
-        """
-        Ensure that all CSS animations on the element selected by 'element_selector' are complete.
-
-        Example usage:
-
-        .. code:: python
-
-            self.wait_for_css_animation_to_end('.prompt', 'Animation ended on prompt pop up')
-
-        Arguments:
-            element_selector (str): css selector of the element.
-            description (str): Description of the Promise, used in log messages.
-            timeout (float): Maximum number of seconds to wait for the Promise to be satisfied before timing out
-
-        """
-
-        def _stop_css_animations():
-            """
-            Wait for jquery to load and then stop all running animations on the element selected by 'element_selector'.
-            """
-            js_query = """
-                function stopAnimation()
-                {
-                    $('%(element_selector)s').css("-webkit-animation", "none");
-                    $('%(element_selector)s').css("-moz-animation", "none");
-                    $('%(element_selector)s').css("-ms-animation", "none");
-                    $('%(element_selector)s').css("animation", "none");
-                }
-                if(typeof(jQuery)=='undefined')
-                    return false;
-
-                stopAnimation()
-                return true;
-            """ % {'element_selector': element_selector}
-
-            return self.browser.execute_script(js_query)
-
-        EmptyPromise(
-            _stop_css_animations,
-            description,
-            timeout=timeout
-        ).fulfill()
-
     ################
     # Click Actions
     ################
@@ -182,7 +139,7 @@ class CertificatesPage(CoursePage):
         """
         Clicks the main action presented by the prompt (such as 'Delete')
         """
-        self.wait_for_css_animation_to_end('.prompt', 'Finished waiting for css animations.')
+        disable_animations(self)
         self.wait_for_confirmation_prompt()
         self.q(css='.prompt button.action-primary').first.click()
         self.wait_for_element_invisibility('.prompt', 'wait for pop up to disappear')
